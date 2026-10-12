@@ -1,0 +1,32 @@
+[Unit]
+# Fast failures must never fail the path unit (it would stop watching silently). No busy loop:
+# PathChanged does not re-fire on re-arm.
+StartLimitIntervalSec=0
+Description=dnsdoh.art-compile: AdGuard lists + user rules + rewrites -> filter LMDB
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=dnsdoh-compile
+Group=dnsdoh-compile
+SupplementaryGroups=dnsdist
+# Wrapper loops while filter/.recompile changes during a run.
+ExecStart=/usr/local/lib/dnsdoh.art/recompile.sh
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/dnsdoh.art
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+CapabilityBoundingSet=
+SystemCallArchitectures=native

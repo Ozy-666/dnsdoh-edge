@@ -1,0 +1,30 @@
+[Unit]
+Description=dnsdist: dnsdoh.art DNS edge
+After=network-online.target unbound.service
+Wants=network-online.target
+# Config: /etc/dnsdoh.art/dnsdist, installed from a commit by the install script in dnsdist/.
+# Binary: /opt/dnsdist/prod, the link `dnsdist/activate.sh prod <version>` sets.
+# DNSDOH_SITE names the site file. Set your own, and any other site-specific addition, in a
+# drop-in, dnsdist.service.d/.
+
+[Service]
+Type=simple
+Environment=DNSDOH_CONF_DIR=/etc/dnsdoh.art/dnsdist DNSDOH_SITE=site-example
+ExecStartPre=/opt/dnsdist/prod/bin/dnsdist --check-config -C /etc/dnsdoh.art/dnsdist/dnsdist.lua
+ExecStart=/opt/dnsdist/prod/bin/dnsdist --supervised --disable-syslog -C /etc/dnsdoh.art/dnsdist/dnsdist.lua
+User=dnsdist
+Group=dnsdist
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/etc/dnsdoh.art/dnsdist /etc/dnsdist /var/lib/dnsdoh.art
+# LMDB reader locks need the lock file read-write.
+ReadWritePaths=-/var/lib/dnsdoh.art/filter.mdb-lock
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

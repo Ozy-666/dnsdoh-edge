@@ -1,0 +1,9 @@
+[Unit]
+Description=dnsdoh.art-compile on filter file change
+
+[Path]
+PathChanged=/etc/dnsdoh.art/filter/.recompile
+Unit=dnsdoh.art-compile.service
+
+[Install]
+WantedBy=multi-user.target

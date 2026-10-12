@@ -1,0 +1,27 @@
+# Example config for dnsdoh.art-compile (--config <file>). Paths are examples; the four lists are
+# public AdGuard HostlistsRegistry lists. Thresholds marked "# example" are a starting point.
+db = "/var/lib/dnsdoh.art/filter.mdb"
+state_dir = "/var/lib/dnsdoh.art"
+user_rules = "/var/lib/dnsdoh.art/user-rules.txt"
+rewrites = "/var/lib/dnsdoh.art/rewrites.conf"
+map_size_mib = 1024   # example
+max_drop = 0.25       # example
+# Safety valve floor: refuse any result with fewer block names, first run included.
+min_block = 1000      # example
+
+[[list]]
+id = 1
+name = "AdGuard DNS filter"
+url = "https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt"
+[[list]]
+id = 1707690930
+name = "OISD Blocklist Small"
+url = "https://adguardteam.github.io/HostlistsRegistry/assets/filter_5.txt"
+[[list]]
+id = 1764884031
+name = "Phishing URL Blocklist (PhishTank and OpenPhish)"
+url = "https://adguardteam.github.io/HostlistsRegistry/assets/filter_30.txt"
+[[list]]
+id = 1779541509
+name = "Malicious URL Blocklist (URLHaus)"
+url = "https://adguardteam.github.io/HostlistsRegistry/assets/filter_11.txt"

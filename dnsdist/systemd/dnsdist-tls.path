@@ -1,0 +1,11 @@
+[Unit]
+Description=Watch letsencrypt archive for dnsdoh.art cert renewals (dnsdist prod)
+
+[Path]
+# The certbot archive dir of the certificate lineage (renewals write new files there); SRC in the
+# tls-sync env file is the same lineage's live/ dir. Change both for your own certificate.
+PathChanged=/etc/letsencrypt/archive/unified.dnsdoh.art
+Unit=dnsdist-tls.service
+
+[Install]
+WantedBy=paths.target

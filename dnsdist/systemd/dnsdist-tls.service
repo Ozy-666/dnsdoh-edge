@@ -1,0 +1,7 @@
+[Unit]
+Description=Copy renewed cert for dnsdist prod and reload it live
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sleep 5
+ExecStart=/usr/local/sbin/dnsdoh-tls-sync /etc/dnsdoh.art/tls-sync-prod.env

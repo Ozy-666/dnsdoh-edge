@@ -1,0 +1,11 @@
+[Unit]
+Description=dnsdoh.art DNS cookie secret rotation
+After=unbound.service
+Requisite=unbound.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/dnsdoh.art-cookie-rotate
+# Rotation state, lock and temp files: /var/lib/dnsdoh.art-cookies, root-owned 0700.
+StateDirectory=dnsdoh.art-cookies
+StateDirectoryMode=0700
