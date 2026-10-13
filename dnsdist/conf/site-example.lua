@@ -10,7 +10,6 @@ return {
   cert             = "/etc/dnsdist/tls/fullchain.pem",
   key              = "/etc/dnsdist/tls/privkey.pem",
   backend          = "127.0.0.1:5353",      -- Unbound
-  backend_pp       = "127.0.0.1:5354",      -- Unbound PROXYv2 listener for port-53 traffic (cookies)
   filter_db        = "/var/lib/dnsdoh.art/filter.mdb",
   service_ip       = "192.0.2.1",
   acl              = { "0.0.0.0/0", "::/0" },
