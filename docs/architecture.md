@@ -47,7 +47,7 @@ nginx-edge applies two small patches at build time: server-side ECH for BoringSS
 - **Answers it makes itself.** ANY queries get NOTIMP. A query for `_dns.resolver.arpa` SVCB gets three ranked records (DoH3 and DoH, then DoQ, then DoT), which is how clients discover the encrypted transports (RFC 9462). AAAA queries get an empty NOERROR answer.
 - **Blocklists.** Each name is looked up in an LMDB database built by the compiler in [compile/](../compile/). An A query for a blocked name such as `doubleclick.net` answers `0.0.0.0`; rules that ask for NXDOMAIN get NXDOMAIN. The compiler runs beside the query path, not in it: if it fails, dnsdist keeps answering from the last good database.
 - **Clearing the authority flag.** Unbound marks answers it holds locally as authoritative. A response rule clears `aa`, because a public resolver relaying answers is not the authority for them.
-- **Passing the client address to Unbound.** Plain-DNS traffic on port 53, UDP and TCP, goes to Unbound with a PROXY protocol v2 header, so Unbound mints DNS cookies (RFC 7873, RFC 9018) for the real client address instead of for loopback. DoT, DoQ and DoH queries go to Unbound's ordinary listener.
+- **One backend.** Every transport, plain DNS on port 53 included, is forwarded to Unbound's single listener on loopback, `127.0.0.1:5353`. No client address is passed on, so Unbound sees every query as coming from `127.0.0.1`.
 
 dnsdist has no packet cache. Unbound does the caching.
 
@@ -59,22 +59,20 @@ Unbound runs as released. Its build, pins and base configuration live in [unboun
 
 - **Cache and DNSSEC.** `module-config: "validator iterator"`. A name whose signatures fail validation is answered SERVFAIL with Extended DNS Error 6 (DNSSEC Bogus).
 - **Upstream.** A forward zone for `.` with `forward-tls-upstream: yes` sends every cache miss over DoT to Cloudflare and Quad9. The addresses and certificate names are in the base configuration linked above. Because it is a forward zone, the upstreams receive the full query name.
-- **Drop-ins from this repository.** [unbound/](../unbound/) holds what sits on top of the base configuration: the PROXY protocol listener for port-53 traffic, and the rotation of the cookie secret.
 
 Since 2026-10-04 Unbound talks DoT to its upstreams itself. Before that a fork of dnscrypt-proxy did it. Why it went is in [decisions.md](decisions.md), and the measurements are in [measurements.md](measurements.md).
 
 ## Checking it from outside
 
-These run from any machine with `dig`. Output from 2026-10-11, trimmed:
+These run from any machine with `dig`. Output from 2026-10-13, trimmed:
 
     dig @194.180.189.33 _dns.resolver.arpa SVCB +short
     1 dnsdoh.art. alpn="h3,h2" port=443 ipv4hint=194.180.189.33 key7="/dns-query{?dns}"
     2 dnsdoh.art. alpn="doq" port=853 ipv4hint=194.180.189.33
     3 dnsdoh.art. alpn="dot" port=853 ipv4hint=194.180.189.33
 
-    dig @194.180.189.33 example.com +cookie +bufsize=4096 +noall +comments
+    dig @194.180.189.33 example.com +nocookie +bufsize=4096 +noall +comments
     ;; flags: qr rd ra ad; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
     ; EDNS: version: 0, flags:; udp: 1232
-    ; COOKIE: bda7d8c99bfe533c010000006acb75fab6ee6fde9c3d9881 (good)
 
-No `aa` in the flags, 1232 bytes offered although 4096 was asked for, and a server cookie that matches the client's.
+No `aa` in the flags, and 1232 bytes offered although 4096 was asked for.

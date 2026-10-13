@@ -23,11 +23,10 @@ dnsdist answers clients and applies the blocklists. Unbound caches and validates
 |---|---|---|
 | `dnsdist/` | dnsdist build pins, build and install scripts, the Lua configuration and its modules, systemd units | nginx TLS front: [nginx-edge](https://github.com/Ozy-666/nginx-edge) |
 | `compile/` | the Rust program that turns AdGuard-syntax blocklists into the database dnsdist reads | - |
-| `unbound/` | the drop-ins that sit on top of the base configuration | the base `unbound.conf`: [unbound-edge](https://github.com/Ozy-666/unbound-edge/blob/main/conf/unbound.conf) |
 | `tests/` | the parity checks that compare answers from the edge against a reference | - |
 | `docs/` | architecture, decisions, measurements, privacy, history | - |
 
-There is no second copy of the base Unbound configuration here. It lives in unbound-edge and is linked, so the two cannot drift apart.
+There is no Unbound configuration here. Its build, pins and configuration live in [unbound-edge](https://github.com/Ozy-666/unbound-edge/blob/main/conf/unbound.conf) and are linked, so the two cannot drift apart.
 
 ## What is not here, and why
 
