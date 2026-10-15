@@ -64,14 +64,14 @@ Since 2026-10-04 Unbound talks DoT to its upstreams itself. Before that a fork o
 
 ## Checking it from outside
 
-These run from any machine with `dig`. Output from 2026-10-13, trimmed:
+These run from any machine with `dig`. Output from 2026-10-13 (the `example.com` one from 2026-10-15), trimmed:
 
     dig @194.180.189.33 _dns.resolver.arpa SVCB +short
     1 dnsdoh.art. alpn="h3,h2" port=443 ipv4hint=194.180.189.33 key7="/dns-query{?dns}"
     2 dnsdoh.art. alpn="doq" port=853 ipv4hint=194.180.189.33
     3 dnsdoh.art. alpn="dot" port=853 ipv4hint=194.180.189.33
 
-    dig @194.180.189.33 example.com +nocookie +bufsize=4096 +noall +comments
+    dig @194.180.189.33 example.com +bufsize=4096 +noall +comments
     ;; flags: qr rd ra ad; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
     ; EDNS: version: 0, flags:; udp: 1232
 

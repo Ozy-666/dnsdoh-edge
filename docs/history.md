@@ -14,6 +14,7 @@ The files in this repository are exported from a private working tree, so a file
 | 2026-10-05 | The public repositories of the old edge were archived on GitHub (below). Eight hourly windows of Unbound's counters were taken to compare against the last stretch on dnscrypt-proxy. |
 | 2026-10-10 | The [migration guide](https://dnsdoh.art/guides/adguard-home-to-dnsdist-and-unbound.html) was published. |
 | 2026-10-11 | The [privacy page](https://dnsdoh.art/privacy.html) was corrected; see [privacy.md](privacy.md). |
+| 2026-10-15 | DNS cookies were removed at 15:41 EEST: no client in our traffic used them. Port 53 now reaches Unbound the same way as the encrypted transports. |
 
 ## Where the old code lives
 

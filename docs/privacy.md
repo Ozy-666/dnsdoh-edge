@@ -11,7 +11,7 @@ That page is the canonical statement. This file restates it for readers of this 
 - **No client address is sent upstream.** Unbound's `module-config` is `"validator iterator"`: the subnet module, which is what would add EDNS Client Subnet (RFC 7871) to upstream queries, is compiled in but not loaded. dnsdist has no ECS option set, so it adds none either. Cloudflare and Quad9 see the name being looked up and this server's address, not yours.
 - **The client address does not reach Unbound.** dnsdist forwards every query, on every transport, to Unbound over loopback without passing the client's address on, so Unbound only ever sees `127.0.0.1`.
 
-These were checked on 2026-10-11 against the running configuration: Unbound's in `/etc/unbound/unbound.conf.d/`, whose base file is published as [unbound-edge/conf/unbound.conf](https://github.com/Ozy-666/unbound-edge/blob/main/conf/unbound.conf), and dnsdist's in [dnsdist/conf/](../dnsdist/conf/).
+These were checked on 2026-10-15 against the running configuration: Unbound's in `/etc/unbound/unbound.conf.d/`, whose base file is published as [unbound-edge/conf/unbound.conf](https://github.com/Ozy-666/unbound-edge/blob/main/conf/unbound.conf), and dnsdist's in [dnsdist/conf/](../dnsdist/conf/).
 
 ## What is not kept
 
