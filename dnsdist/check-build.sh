@@ -13,5 +13,10 @@ done
 grep -q 'LuaJIT' <<<"$V" || { echo "FAIL: not LuaJIT"; fail=1; }
 if ldd "$B" | grep -q 'not found'; then echo "FAIL: unresolved libs"; ldd "$B" | grep 'not found'; fail=1; fi
 ldd "$B" | grep -q "$P/lib/libdnsdist-quiche.so" || { echo "FAIL: quiche not from $P/lib"; fail=1; }
+# a prefix with its own OpenSSL (DNSDIST_VARIANT=pq) must load it, not the system one
+for l in libssl libcrypto; do
+  compgen -G "$P/lib/$l.so.*" >/dev/null || continue
+  ldd "$B" | grep -q "$l\.so\.[0-9.]* => $P/lib/" || { echo "FAIL: $l not from $P/lib"; fail=1; }
+done
 [ $fail = 0 ] && echo "OK: $("$B" --version 2>&1 | head -1)"
 exit $fail

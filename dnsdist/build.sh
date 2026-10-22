@@ -2,10 +2,14 @@
 # Build dnsdist from pinned, verified sources into /opt/dnsdist/<version>. Does NOT touch `current`.
 # Nothing system-wide besides that prefix and the build cache. Resumable.
 # Run: nice -n19 ionice -c3 bash dnsdist/build.sh
+# DNSDIST_VARIANT=pq: into /opt/dnsdist/<version>-pq, DoT on a private OpenSSL in that prefix and quiche on
+# BoringSSL $BORINGSSL_COMMIT (both offer X25519MLKEM768 by default; neither needs a group setting).
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd); . "$HERE/pins.env"
-PFX=/opt/dnsdist/$DNSDIST_VERSION
-W=/var/cache/dnsdist-build/$DNSDIST_VERSION
+VARIANT=${DNSDIST_VARIANT:-}
+case $VARIANT in ""|pq) ;; *) echo "build: DNSDIST_VARIANT must be empty or pq" >&2; exit 1 ;; esac
+PFX=/opt/dnsdist/$DNSDIST_VERSION${VARIANT:+-$VARIANT}
+W=/var/cache/dnsdist-build/$DNSDIST_VERSION${VARIANT:+-$VARIANT}
 TC=/var/cache/dnsdist-build/toolchain-rust-$RUST_VERSION
 mkdir -p "$PFX"/{lib/pkgconfig,include} "$W"; cd "$W"
 J=2                                             # production box: leave cores for DNS/nginx
@@ -23,6 +27,43 @@ echo "== boost headers (apt-get download + dpkg -x; not installed)"
 [ -d "$W/deb/usr/include/boost" ] || { apt-get download libboost1.83-dev >/dev/null; dpkg -x libboost1.83-dev_*.deb "$W/deb"; }
 # $PFX/include: meson passes quiche's -I to libdnsdist-common but not to the dnsdist target
 export CPATH="$W/deb/usr/include:$PFX/include"
+
+if [ "$VARIANT" = pq ]; then
+  echo "== openssl $OPENSSL_VERSION (private, $PFX/lib)"
+  OT=openssl-$OPENSSL_VERSION.tar.gz; OU=https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION
+  [ -f $OT ] || curl -sSL --fail -O $OU/$OT
+  [ -f $OT.asc ] || curl -sSL --fail -O $OU/$OT.asc
+  echo "$OPENSSL_SHA256  $OT" | sha256sum -c -
+  export GNUPGHOME="$W/gnupg"; mkdir -p -m700 "$GNUPGHOME"
+  [ -f openssl-signer.asc ] || curl -sS --fail -o openssl-signer.asc "https://keyserver.ubuntu.com/pks/lookup?op=get&options=mr&search=0x$OPENSSL_SIGNER_FPR"
+  gpg -q --import openssl-signer.asc
+  # VALIDSIG's last field is the primary key's fingerprint: a good signature by any other key stops here
+  # (-a: the status stream carries a binary notation, without it grep never matches)
+  gpg --status-fd 1 --verify $OT.asc $OT 2>/dev/null | grep -a "^\[GNUPG:\] VALIDSIG .* $OPENSSL_SIGNER_FPR$" >/dev/null
+  if [ ! -f "$PFX/lib/pkgconfig/libssl.pc" ]; then
+    rm -rf openssl-$OPENSSL_VERSION && tar xzf $OT && cd openssl-$OPENSSL_VERSION
+    # openssldir inside the prefix: the system /etc/ssl/openssl.cnf (OpenSSL 3.0) does not apply to this build
+    ./Configure linux-x86_64 --prefix="$PFX" --openssldir="$PFX/ssl" --libdir=lib shared no-tests no-docs \
+      "-Wl,-rpath,$PFX/lib" $CFLAGS >/dev/null
+    make -j$J >/dev/null
+    make install_sw >/dev/null
+    cd "$W"
+  fi
+  "$PFX/bin/openssl" version
+
+  echo "== boringssl $BORINGSSL_COMMIT (static, for quiche)"
+  BB=$W/boringssl
+  [ -d $BB/.git ] || GIT_CONFIG_GLOBAL=/dev/null git clone -q https://boringssl.googlesource.com/boringssl $BB
+  git -C $BB -c advice.detachedHead=false checkout -q $BORINGSSL_COMMIT
+  [ "$(git -C $BB rev-parse HEAD)" = "$BORINGSSL_COMMIT" ]
+  # flags as nginx's BoringSSL for :443 is built (plain Release), plus PIC for the quiche .so; -march=native here
+  # trips gcc's -Werror=stringop-overflow in keccak.cc.inc. ninja reports errors on stdout: keep it.
+  [ -f $BB/build/libssl.a ] || { env -u CFLAGS -u CXXFLAGS cmake -S $BB -B $BB/build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON >/dev/null
+    ninja -C $BB/build -j$J crypto ssl; }
+  export BORING_BSSL_PATH=$BB/build BORING_BSSL_INCLUDE_PATH=$BB/include
+  export BINDGEN_EXTRA_CLANG_ARGS="-include $HERE/boring-compat.h"   # two removed group IDs, see the header
+fi
 
 echo "== quiche $QUICHE_VERSION"
 QT=quiche-$QUICHE_VERSION.tar.gz
