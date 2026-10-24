@@ -1,3 +1,17 @@
+<p align="center">
+  <img src="docs/images/dnsdoh-edge.jpg" alt="dnsdoh-edge banner: dnsdist + Unbound (image generated with Gemini)" width="100%">
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="License: BSD-2-Clause" src="https://badgen.net/badge/license/BSD-2-Clause/blue"></a>
+  <a href="https://www.dnsdist.org/"><img alt="Front: dnsdist" src="https://badgen.net/badge/front/dnsdist/1f6feb"></a>
+  <a href="https://github.com/Ozy-666/unbound-edge"><img alt="Resolver: Unbound" src="https://badgen.net/badge/resolver/Unbound/2ea44f"></a>
+  <a href="compile/"><img alt="Compiler: Rust" src="https://badgen.net/badge/compiler/Rust/dea584"></a>
+  <img alt="Transports: DoH3, DoH, DoT, DoQ, Do53" src="https://badgen.net/badge/transports/DoH3%20%7C%20DoH%20%7C%20DoT%20%7C%20DoQ%20%7C%20Do53/cyan">
+  <img alt="Key exchange: X25519MLKEM768" src="https://badgen.net/badge/key%20exchange/X25519MLKEM768/8250df">
+  <a href="https://dnsdoh.art"><img alt="Service: dnsdoh.art" src="https://badgen.net/badge/service/dnsdoh.art/0a7ea4"></a>
+</p>
+
 # dnsdoh-edge
 
 The old dnsdoh.art edge was four forks: a patched AdGuard Home, patched copies of two libraries inside it, and a patched dnscrypt-proxy. Every upstream release meant reading the changes, carrying our patches across and testing again before it could serve anyone. What runs instead is dnsdist in front and Unbound behind it, both configured rather than patched. This repository shows that setup. It is an export of a private working tree, not the working tree itself, and the section "What is not here, and why" says what is left out.
